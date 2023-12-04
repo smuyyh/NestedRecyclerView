@@ -1,0 +1,98 @@
+package com.yuyang.library;
+
+import android.graphics.Color;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.design.widget.TabLayout;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import com.yuyang.library.nestedrv.ChildRecyclerView;
+import com.yuyang.library.nestedrv.INestedParentAdapter;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+
+/**
+ * Created by yuyuhang on 2023/12/4.
+ */
+public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements INestedParentAdapter {
+
+    private static final int TYPE_ITEM = 0;
+
+    private static final int TYPE_INNER = 1;
+
+    private List<Integer> dataList = new ArrayList<>();
+
+    private List<String> tabs = Arrays.asList("推荐", "热点", "视频", "直播", "社会", "娱乐", "科技", "汽车", "体育", "财经", "军事", "国际", "时尚", "游戏", "旅游", "历史", "探索", "美食", "育儿", "养生", "故事", "美文");
+
+    private InnerViewHolder mInnerViewHolder;
+
+    @NonNull
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
+        if (viewType == TYPE_ITEM) {
+            ImageView imageView = new ImageView(viewGroup.getContext());
+            imageView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            return new RecyclerView.ViewHolder(imageView) {
+            };
+        }
+        return new InnerViewHolder(LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_inner, viewGroup, false));
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
+        int viewType = getItemViewType(position);
+        if (viewType == TYPE_ITEM) {
+            ImageView imageView = (ImageView) viewHolder.itemView;
+            Drawable drawable = ContextCompat.getDrawable(viewHolder.itemView.getContext(), dataList.get(viewHolder.getAdapterPosition()));
+            int width = drawable.getIntrinsicWidth();
+            int height = drawable.getIntrinsicHeight();
+            int targetHeight = viewHolder.itemView.getContext().getResources().getDisplayMetrics().widthPixels * height / width;
+            ViewGroup.LayoutParams layoutParams = viewHolder.itemView.getLayoutParams();
+            layoutParams.height = targetHeight;
+            imageView.setImageDrawable(drawable);
+        } else {
+            mInnerViewHolder = (InnerViewHolder) viewHolder;
+            mInnerViewHolder.bindData(tabs);
+        }
+    }
+
+    @Override
+    public int getItemCount() {
+        return dataList.size() + 1;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return position < dataList.size() ? TYPE_ITEM : TYPE_INNER;
+    }
+
+    @Override
+    public ChildRecyclerView getCurrentChildRecyclerView() {
+        return mInnerViewHolder == null ? null : mInnerViewHolder.getCurrentChildRecyclerView();
+    }
+
+    public void setDataList(List<Integer> dataList) {
+        this.dataList.clear();
+        if (dataList != null) {
+            this.dataList.addAll(dataList);
+        }
+        notifyDataSetChanged();
+    }
+
+
+}
