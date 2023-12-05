@@ -86,8 +86,8 @@ public class ChildRecyclerView extends RecyclerView {
             mVelocity = 0;
         }
 
-        int x = (int) ev.getX();
-        int y = (int) ev.getY();
+        int x = (int) ev.getRawX();
+        int y = (int) ev.getRawY();
         if (ev.getAction() != MotionEvent.ACTION_MOVE) {
             mLastXInterceptX = x;
             mLastYInterceptY = y;

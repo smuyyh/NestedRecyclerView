@@ -80,8 +80,8 @@ public class ParentRecyclerView extends RecyclerView {
     }
 
     private boolean isChildConsumeTouch(MotionEvent event) {
-        int x = (int) event.getX();
-        int y = (int) event.getY();
+        int x = (int) event.getRawX();
+        int y = (int) event.getRawY();
         if (event.getAction() != MotionEvent.ACTION_MOVE) {
             mLastXInterceptX = x;
             mLastYInterceptY = y;
@@ -119,16 +119,20 @@ public class ParentRecyclerView extends RecyclerView {
     @Override
     public boolean onTouchEvent(MotionEvent e) {
         if (lastY == 0f) {
-            lastY = e.getY();
+            lastY = e.getRawY();
         }
         if (isScrollToBottom()) {
             ChildRecyclerView childRecyclerView = findNestedScrollingChildRecyclerView();
             if (childRecyclerView != null) {
-                int deltaY = (int) (lastY - e.getY());
-                childRecyclerView.scrollBy(0, deltaY);
+                int deltaY = (int) (lastY - e.getRawY());
+                if (deltaY >= 0 || !childRecyclerView.isScrollTop()) {
+                    childRecyclerView.scrollBy(0, deltaY);
+                    lastY = e.getRawY();
+                    return true;
+                }
             }
         }
-        lastY = e.getY();
+        lastY = e.getRawY();
 
         try {
             return super.onTouchEvent(e);
