@@ -7,5 +7,10 @@ package com.yuyang.library.nestedrv;
  */
 public interface INestedParentAdapter {
 
+    /**
+     * 获取当前需要联动的子RecyclerView
+     *
+     * @return
+     */
     ChildRecyclerView getCurrentChildRecyclerView();
 }

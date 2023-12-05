@@ -4,6 +4,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 /**
  * 平滑滚动效果的辅助类

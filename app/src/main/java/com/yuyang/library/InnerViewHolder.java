@@ -72,7 +72,6 @@ public class InnerViewHolder extends RecyclerView.ViewHolder {
                     TextView textView = new TextView(viewGroup.getContext());
                     textView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
                     textView.setPadding(100, 100, 100, 100);
-                    textView.setMinHeight(200 + new Random().nextInt(300));
                     textView.setGravity(Gravity.CENTER_VERTICAL);
                     textView.setBackgroundColor(Color.WHITE);
                     return new RecyclerView.ViewHolder(textView) {
@@ -82,6 +81,7 @@ public class InnerViewHolder extends RecyclerView.ViewHolder {
                 @Override
                 public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
                     ((TextView) viewHolder.itemView).setText(str + " item " + i);
+                    ((TextView) viewHolder.itemView).setMinHeight((int) (200 + i * 1.1f));
                     viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {

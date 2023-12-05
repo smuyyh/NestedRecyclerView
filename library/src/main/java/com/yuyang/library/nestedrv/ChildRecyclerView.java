@@ -22,13 +22,9 @@ public class ChildRecyclerView extends RecyclerView {
      */
     private int mVelocity = 0;
 
-    /**
-     * 是否开始fling
-     */
-    private boolean isStartFling = false;
+    private int mLastInterceptX;
 
-    private int mLastXInterceptX;
-    private int mLastYInterceptY;
+    private int mLastInterceptY;
 
     public ChildRecyclerView(@NonNull Context context) {
         this(context, null);
@@ -49,26 +45,19 @@ public class ChildRecyclerView extends RecyclerView {
         addOnScrollListener(new OnScrollListener() {
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
                 if (newState == SCROLL_STATE_IDLE) {
                     dispatchParentFling();
-                }
-                super.onScrollStateChanged(recyclerView, newState);
-
-            }
-
-            @Override
-            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                if (isStartFling) {
-                    isStartFling = false;
                 }
             }
         });
     }
 
     private void dispatchParentFling() {
-        findParentRecyclerView();
-        if (mParentRecyclerView != null && isScrollTop() && mVelocity != 0) {
+        ensureParentRecyclerView();
+        // 子容器滚动到顶部，如果还有剩余加速度，就交给父容器处理
+        if (mParentRecyclerView != null && isScrollToTop() && mVelocity != 0) {
+            // 尽量让速度传递更加平滑
             float velocityY = NestedOverScroller.invokeCurrentVelocity(this);
             if (Math.abs(velocityY) <= 2.0E-5F) {
                 velocityY = (float) this.mVelocity * 0.5F;
@@ -82,23 +71,24 @@ public class ChildRecyclerView extends RecyclerView {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (ev != null && ev.getAction() == MotionEvent.ACTION_DOWN) {
+        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
             mVelocity = 0;
         }
 
         int x = (int) ev.getRawX();
         int y = (int) ev.getRawY();
         if (ev.getAction() != MotionEvent.ACTION_MOVE) {
-            mLastXInterceptX = x;
-            mLastYInterceptY = y;
+            mLastInterceptX = x;
+            mLastInterceptY = y;
         }
 
-        int deltaX = x - mLastXInterceptX;
-        int deltaY = y - mLastYInterceptY;
+        int deltaX = x - mLastInterceptX;
+        int deltaY = y - mLastInterceptY;
 
-        if (isScrollTop()) {
+        if (isScrollToTop()) {
             getParent().requestDisallowInterceptTouchEvent(false);
         } else {
+            // 如果是向上滑动且子容器还没滚动到顶部时，则不让父容器拦截触摸事件
             getParent().requestDisallowInterceptTouchEvent(Math.abs(deltaX) <= Math.abs(deltaY));
         }
         return super.dispatchTouchEvent(ev);
@@ -111,17 +101,20 @@ public class ChildRecyclerView extends RecyclerView {
         if (!fling || velocityY >= 0) {
             mVelocity = 0;
         } else {
-            isStartFling = true;
             mVelocity = velocityY;
         }
         return fling;
     }
 
-    public boolean isScrollTop() {
+    public boolean isScrollToTop() {
         return !canScrollVertically(-1);
     }
 
-    private ParentRecyclerView findParentRecyclerView() {
+    public boolean isScrollToBottom() {
+        return !canScrollVertically(1);
+    }
+
+    private void ensureParentRecyclerView() {
         if (mParentRecyclerView == null) {
             ViewParent parentView = getParent();
             while (!(parentView instanceof ParentRecyclerView)) {
@@ -129,6 +122,5 @@ public class ChildRecyclerView extends RecyclerView {
             }
             mParentRecyclerView = (ParentRecyclerView) parentView;
         }
-        return mParentRecyclerView;
     }
 }

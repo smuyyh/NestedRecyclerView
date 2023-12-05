@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.yuyang.library.nestedrv.ChildRecyclerView;
 import com.yuyang.library.nestedrv.INestedParentAdapter;
@@ -68,7 +69,7 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             imageView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
+                    Toast.makeText(v.getContext(), "点击了第" + viewHolder.getAdapterPosition() + "个", Toast.LENGTH_SHORT).show();
                 }
             });
         } else {
