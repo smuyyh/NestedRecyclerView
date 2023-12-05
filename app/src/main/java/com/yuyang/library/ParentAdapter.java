@@ -65,6 +65,12 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             ViewGroup.LayoutParams layoutParams = viewHolder.itemView.getLayoutParams();
             layoutParams.height = targetHeight;
             imageView.setImageDrawable(drawable);
+            imageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                }
+            });
         } else {
             mInnerViewHolder = (InnerViewHolder) viewHolder;
             mInnerViewHolder.bindData(tabs);

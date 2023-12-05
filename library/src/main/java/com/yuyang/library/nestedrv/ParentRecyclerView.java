@@ -81,7 +81,7 @@ public class ParentRecyclerView extends RecyclerView {
     public boolean onInterceptTouchEvent(MotionEvent event) {
         boolean res = false;
         if (!isChildConsumeTouch(event)) {
-            res = super.onInterceptHoverEvent(event);
+            res = super.onInterceptTouchEvent(event);
         }
         return res;
     }
