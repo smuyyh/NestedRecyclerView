@@ -19,11 +19,6 @@ public class ParentRecyclerView extends RecyclerView {
     private final int mTouchSlop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
 
     /**
-     * fling时的辅助类
-     */
-    private NestedOverScroller mNestedOverScroller;
-
-    /**
      * fling时的加速度
      */
     private int mVelocity = 0;
@@ -47,8 +42,6 @@ public class ParentRecyclerView extends RecyclerView {
     }
 
     private void init() {
-        mNestedOverScroller = new NestedOverScroller();
-
         addOnScrollListener(new OnScrollListener() {
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
@@ -158,7 +151,7 @@ public class ParentRecyclerView extends RecyclerView {
 
     private void dispatchChildFling() {
         if (isScrollToBottom() && mVelocity != 0) {
-            float mVelocity = mNestedOverScroller.invokeCurrentVelocity(this);
+            float mVelocity = NestedOverScroller.invokeCurrentVelocity(this);
             if (Math.abs(mVelocity) <= 2.0E-5F) {
                 mVelocity = (float) this.mVelocity * 0.5F;
             } else {

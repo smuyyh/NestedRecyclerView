@@ -13,6 +13,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.yuyang.library.nestedrv.ChildRecyclerView;
 
@@ -81,6 +82,12 @@ public class InnerViewHolder extends RecyclerView.ViewHolder {
                 @Override
                 public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
                     ((TextView) viewHolder.itemView).setText(str + " item " + i);
+                    viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Toast.makeText(v.getContext(), "click " + str + " item " + i, Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }
 
                 @Override

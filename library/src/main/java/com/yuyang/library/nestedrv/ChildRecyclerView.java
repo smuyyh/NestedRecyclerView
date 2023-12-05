@@ -18,11 +18,6 @@ public class ChildRecyclerView extends RecyclerView {
     private ParentRecyclerView mParentRecyclerView = null;
 
     /**
-     * fling时的辅助类
-     */
-    private NestedOverScroller mNestedOverScroller;
-
-    /**
      * fling时的加速度
      */
     private int mVelocity = 0;
@@ -31,6 +26,9 @@ public class ChildRecyclerView extends RecyclerView {
      * 是否开始fling
      */
     private boolean isStartFling = false;
+
+    private int mLastXInterceptX;
+    private int mLastYInterceptY;
 
     public ChildRecyclerView(@NonNull Context context) {
         this(context, null);
@@ -46,7 +44,6 @@ public class ChildRecyclerView extends RecyclerView {
     }
 
     private void init() {
-        mNestedOverScroller = new NestedOverScroller();
         setOverScrollMode(OVER_SCROLL_NEVER);
 
         addOnScrollListener(new OnScrollListener() {
@@ -72,7 +69,7 @@ public class ChildRecyclerView extends RecyclerView {
     private void dispatchParentFling() {
         findParentRecyclerView();
         if (mParentRecyclerView != null && isScrollTop() && mVelocity != 0) {
-            float velocityY = mNestedOverScroller.invokeCurrentVelocity(this);
+            float velocityY = NestedOverScroller.invokeCurrentVelocity(this);
             if (Math.abs(velocityY) <= 2.0E-5F) {
                 velocityY = (float) this.mVelocity * 0.5F;
             } else {
@@ -87,6 +84,22 @@ public class ChildRecyclerView extends RecyclerView {
     public boolean dispatchTouchEvent(MotionEvent ev) {
         if (ev != null && ev.getAction() == MotionEvent.ACTION_DOWN) {
             mVelocity = 0;
+        }
+
+        int x = (int) ev.getX();
+        int y = (int) ev.getY();
+        if (ev.getAction() != MotionEvent.ACTION_MOVE) {
+            mLastXInterceptX = x;
+            mLastYInterceptY = y;
+        }
+
+        int deltaX = x - mLastXInterceptX;
+        int deltaY = y - mLastYInterceptY;
+
+        if (isScrollTop()) {
+            getParent().requestDisallowInterceptTouchEvent(false);
+        } else {
+            getParent().requestDisallowInterceptTouchEvent(Math.abs(deltaX) <= Math.abs(deltaY));
         }
         return super.dispatchTouchEvent(ev);
     }

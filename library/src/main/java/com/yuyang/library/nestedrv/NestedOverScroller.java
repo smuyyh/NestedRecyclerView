@@ -13,7 +13,7 @@ import java.lang.reflect.Field;
  */
 public class NestedOverScroller {
 
-    public float invokeCurrentVelocity(@NonNull RecyclerView rv) {
+    public static float invokeCurrentVelocity(@NonNull RecyclerView rv) {
         try {
             Field viewFlinger = null;
             for (Class<?> superClass = rv.getClass().getSuperclass(); superClass != null; superClass = superClass.getSuperclass()) {
