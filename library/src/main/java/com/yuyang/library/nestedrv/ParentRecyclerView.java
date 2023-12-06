@@ -58,7 +58,7 @@ public class ParentRecyclerView extends RecyclerView {
         if (ev != null && ev.getAction() == MotionEvent.ACTION_DOWN) {
             mVelocity = 0;
             ChildRecyclerView childRecyclerView = findNestedScrollingChildRecyclerView();
-            if (isScrollToBottom() || childRecyclerView == null || !childRecyclerView.isScrollToTop()) {
+            if (isScrollToBottom() && (childRecyclerView != null && !childRecyclerView.isScrollToTop())) {
                 // 这里不调用 stopScroll() 有概率性会导致 child fling 失效
                 stopScroll();
             }
