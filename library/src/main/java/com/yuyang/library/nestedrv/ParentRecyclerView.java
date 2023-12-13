@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
+import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
 
@@ -28,6 +29,10 @@ public class ParentRecyclerView extends RecyclerView {
     private int mLastInterceptX;
     private int mLastInterceptY;
 
+    private VelocityTracker mVelocityTracker;
+    private int mMaximumFlingVelocity;
+    private int mMinimumFlingVelocity;
+
     public ParentRecyclerView(@NonNull Context context) {
         this(context, null);
     }
@@ -42,6 +47,10 @@ public class ParentRecyclerView extends RecyclerView {
     }
 
     private void init() {
+        mVelocityTracker = VelocityTracker.obtain();
+        final ViewConfiguration configuration = ViewConfiguration.get(getContext());
+        mMaximumFlingVelocity = configuration.getScaledMaximumFlingVelocity();
+        mMinimumFlingVelocity = configuration.getScaledMinimumFlingVelocity();
         addOnScrollListener(new OnScrollListener() {
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
@@ -127,14 +136,26 @@ public class ParentRecyclerView extends RecyclerView {
         if (mLastTouchY == 0f) {
             mLastTouchY = e.getRawY();
         }
+
         if (isScrollToBottom()) {
             // 如果父容器已经滚动到底部，且向上滑动，事件传递给子容器
             ChildRecyclerView childRecyclerView = findNestedScrollingChildRecyclerView();
             if (childRecyclerView != null) {
                 int deltaY = (int) (mLastTouchY - e.getRawY());
                 if (deltaY >= 0 || !childRecyclerView.isScrollToTop()) {
-                    childRecyclerView.scrollBy(0, deltaY);
-                    mLastTouchY = e.getRawY();
+                    mVelocityTracker.addMovement(e);
+                    if (e.getAction() == MotionEvent.ACTION_UP) {
+                        // 传递剩余 fling 速度
+                        mVelocityTracker.computeCurrentVelocity(1000, mMaximumFlingVelocity);
+                        float velocityY = mVelocityTracker.getYVelocity();
+                        if (Math.abs(velocityY) > mMinimumFlingVelocity) {
+                            childRecyclerView.fling(0, -(int) velocityY);
+                        }
+                        mVelocityTracker.recycle();
+                    } else {
+                        childRecyclerView.scrollBy(0, deltaY);
+                        mLastTouchY = e.getRawY();
+                    }
                     return true;
                 }
             }
