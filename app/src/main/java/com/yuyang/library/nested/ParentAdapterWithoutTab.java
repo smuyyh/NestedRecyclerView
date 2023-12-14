@@ -1,26 +1,27 @@
-package com.yuyang.library;
+package com.yuyang.library.nested;
 
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
-import android.view.LayoutInflater;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.yuyang.library.ChildAdapter;
 import com.yuyang.library.nestedrv.ChildRecyclerView;
 import com.yuyang.library.nestedrv.INestedParentAdapter;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
  * Created by yuyuhang on 2023/12/4.
  */
-public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements INestedParentAdapter {
+public class ParentAdapterWithoutTab extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements INestedParentAdapter {
 
     private static final int TYPE_ITEM = 0;
 
@@ -28,9 +29,7 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
     private List<Integer> dataList = new ArrayList<>();
 
-    private List<String> tabs = Arrays.asList("推荐", "热点", "视频", "直播", "社会", "娱乐", "科技", "汽车", "体育", "财经", "军事", "国际", "时尚", "游戏", "旅游", "历史", "探索", "美食", "育儿", "养生", "故事", "美文");
-
-    private TabViewHolder mTabViewHolder;
+    private ChildRecyclerView childRecyclerView;
 
     @NonNull
     @Override
@@ -41,7 +40,17 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             return new RecyclerView.ViewHolder(imageView) {
             };
         }
-        return new TabViewHolder(LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_inner, viewGroup, false));
+
+        if (childRecyclerView == null) {
+            childRecyclerView = new ChildRecyclerView(viewGroup.getContext());
+            childRecyclerView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        } else {
+            if (childRecyclerView.getParent() != null) {
+                ((ViewGroup) childRecyclerView.getParent()).removeView(childRecyclerView);
+            }
+        }
+        return new RecyclerView.ViewHolder(childRecyclerView) {
+        };
     }
 
     @Override
@@ -63,8 +72,15 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 }
             });
         } else {
-            mTabViewHolder = (TabViewHolder) viewHolder;
-            mTabViewHolder.bindData(tabs);
+            childRecyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
+            childRecyclerView.setAdapter(new ChildAdapter("默认"));
+            childRecyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
+                @Override
+                public void getItemOffsets(@NonNull Rect outRect, @NonNull View view, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
+                    super.getItemOffsets(outRect, view, parent, state);
+                    outRect.left = outRect.right = outRect.bottom = outRect.top = 10;
+                }
+            });
         }
     }
 
@@ -80,7 +96,7 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
     @Override
     public ChildRecyclerView getCurrentChildRecyclerView() {
-        return mTabViewHolder == null ? null : mTabViewHolder.getCurrentChildRecyclerView();
+        return childRecyclerView;
     }
 
     public void setDataList(List<Integer> dataList) {
@@ -90,6 +106,5 @@ public class ParentAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         }
         notifyDataSetChanged();
     }
-
 
 }

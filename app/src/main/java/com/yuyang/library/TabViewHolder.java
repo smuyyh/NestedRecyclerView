@@ -1,6 +1,5 @@
 package com.yuyang.library;
 
-import android.graphics.Color;
 import android.graphics.Rect;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -9,31 +8,27 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.yuyang.library.nestedrv.ChildRecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 /**
  * Created by yuyuhang on 2023/12/4.
  */
-public class InnerViewHolder extends RecyclerView.ViewHolder {
+public class TabViewHolder extends RecyclerView.ViewHolder {
 
-    private TabLayout mTabLayout;
-    private ViewPager mViewPager;
+    private final TabLayout mTabLayout;
+    private final ViewPager mViewPager;
 
-    private List<ChildRecyclerView> mViewList = new ArrayList<>();
+    private final List<ChildRecyclerView> mViewList = new ArrayList<>();
 
     private ChildRecyclerView mCurrentChildRecyclerView;
 
-    public InnerViewHolder(@NonNull android.view.View itemView) {
+    public TabViewHolder(@NonNull android.view.View itemView) {
         super(itemView);
 
         mTabLayout = itemView.findViewById(R.id.tab_layout);
@@ -65,36 +60,7 @@ public class InnerViewHolder extends RecyclerView.ViewHolder {
         for (String str : tabs) {
             ChildRecyclerView childRecyclerView = new ChildRecyclerView(mViewPager.getContext());
             childRecyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
-            childRecyclerView.setAdapter(new RecyclerView.Adapter() {
-                @NonNull
-                @Override
-                public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-                    TextView textView = new TextView(viewGroup.getContext());
-                    textView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                    textView.setPadding(100, 100, 100, 100);
-                    textView.setGravity(Gravity.CENTER_VERTICAL);
-                    textView.setBackgroundColor(Color.WHITE);
-                    return new RecyclerView.ViewHolder(textView) {
-                    };
-                }
-
-                @Override
-                public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
-                    ((TextView) viewHolder.itemView).setText(str + " item " + i);
-                    ((TextView) viewHolder.itemView).setMinHeight((int) (200 + i * 1.1f));
-                    viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Toast.makeText(v.getContext(), "click " + str + " item " + i, Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                }
-
-                @Override
-                public int getItemCount() {
-                    return 100;
-                }
-            });
+            childRecyclerView.setAdapter(new ChildAdapter(str));
             childRecyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
                 @Override
                 public void getItemOffsets(@NonNull Rect outRect, @NonNull View view, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {

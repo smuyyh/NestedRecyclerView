@@ -85,11 +85,9 @@ public class ChildRecyclerView extends RecyclerView {
         int deltaX = x - mLastInterceptX;
         int deltaY = y - mLastInterceptY;
 
-        if (isScrollToTop()) {
+        if (isScrollToTop() && Math.abs(deltaX) <= Math.abs(deltaY) && getParent() != null) {
+            // 子容器滚动到顶部，继续向上滑动，此时父容器需要继续拦截事件。与父容器 onInterceptTouchEvent 对应
             getParent().requestDisallowInterceptTouchEvent(false);
-        } else {
-            // 如果是向上滑动且子容器还没滚动到顶部时，则不让父容器拦截触摸事件
-            getParent().requestDisallowInterceptTouchEvent(Math.abs(deltaX) <= Math.abs(deltaY));
         }
         return super.dispatchTouchEvent(ev);
     }

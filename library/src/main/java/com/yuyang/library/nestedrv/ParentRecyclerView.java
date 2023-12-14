@@ -29,9 +29,21 @@ public class ParentRecyclerView extends RecyclerView {
     private int mLastInterceptX;
     private int mLastInterceptY;
 
-    private VelocityTracker mVelocityTracker;
+    /**
+     * 用于向子容器传递 fling 速度
+     */
+    private final VelocityTracker mVelocityTracker = VelocityTracker.obtain();
     private int mMaximumFlingVelocity;
     private int mMinimumFlingVelocity;
+
+    /**
+     * 子容器是否消耗了滑动事件
+     */
+    private boolean childConsumeTouch = false;
+    /**
+     * 子容器消耗的滑动距离
+     */
+    private int childConsumeDistance = 0;
 
     public ParentRecyclerView(@NonNull Context context) {
         this(context, null);
@@ -47,10 +59,10 @@ public class ParentRecyclerView extends RecyclerView {
     }
 
     private void init() {
-        mVelocityTracker = VelocityTracker.obtain();
-        final ViewConfiguration configuration = ViewConfiguration.get(getContext());
+        ViewConfiguration configuration = ViewConfiguration.get(getContext());
         mMaximumFlingVelocity = configuration.getScaledMaximumFlingVelocity();
         mMinimumFlingVelocity = configuration.getScaledMinimumFlingVelocity();
+
         addOnScrollListener(new OnScrollListener() {
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
@@ -64,17 +76,25 @@ public class ParentRecyclerView extends RecyclerView {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (ev != null && ev.getAction() == MotionEvent.ACTION_DOWN) {
-            mVelocity = 0;
-            ChildRecyclerView childRecyclerView = findNestedScrollingChildRecyclerView();
-            if (isScrollToBottom() && (childRecyclerView != null && !childRecyclerView.isScrollToTop())) {
-                // 这里不调用 stopScroll() 有概率性会导致 child fling 失效
-                stopScroll();
-            }
-        }
+        switch (ev.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                mVelocity = 0;
+                mLastTouchY = ev.getRawY();
+                childConsumeTouch = false;
+                childConsumeDistance = 0;
 
-        if (!(ev == null || ev.getAction() == MotionEvent.ACTION_MOVE)) {
-            mLastTouchY = 0f;
+                ChildRecyclerView childRecyclerView = findNestedScrollingChildRecyclerView();
+                if (isScrollToBottom() && (childRecyclerView != null && !childRecyclerView.isScrollToTop())) {
+                    stopScroll();
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+                childConsumeTouch = false;
+                childConsumeDistance = 0;
+                break;
+            default:
+                break;
         }
 
         try {
@@ -88,6 +108,8 @@ public class ParentRecyclerView extends RecyclerView {
     @Override
     public boolean onInterceptTouchEvent(MotionEvent event) {
         if (isChildConsumeTouch(event)) {
+            // 子容器如果消费了触摸事件，后续父容器就无法再拦截事件
+            // 在必要的时候，子容器需调用 requestDisallowInterceptTouchEvent(false) 来允许父容器继续拦截事件
             return false;
         }
         // 子容器不消费触摸事件，父容器按正常流程处理
@@ -107,7 +129,7 @@ public class ParentRecyclerView extends RecyclerView {
         }
         int deltaX = x - mLastInterceptX;
         int deltaY = y - mLastInterceptY;
-        if (Math.abs(deltaX) <= Math.abs(deltaY) || Math.abs(deltaY) <= mTouchSlop) {
+        if (Math.abs(deltaX) > Math.abs(deltaY) || Math.abs(deltaY) <= mTouchSlop) {
             return false;
         }
 
@@ -133,12 +155,8 @@ public class ParentRecyclerView extends RecyclerView {
 
     @Override
     public boolean onTouchEvent(MotionEvent e) {
-        if (mLastTouchY == 0f) {
-            mLastTouchY = e.getRawY();
-        }
-
         if (isScrollToBottom()) {
-            // 如果父容器已经滚动到底部，且向上滑动，事件传递给子容器
+            // 如果父容器已经滚动到底部，且向上滑动，且子容器还没滚动到顶部，事件传递给子容器
             ChildRecyclerView childRecyclerView = findNestedScrollingChildRecyclerView();
             if (childRecyclerView != null) {
                 int deltaY = (int) (mLastTouchY - e.getRawY());
@@ -151,17 +169,42 @@ public class ParentRecyclerView extends RecyclerView {
                         if (Math.abs(velocityY) > mMinimumFlingVelocity) {
                             childRecyclerView.fling(0, -(int) velocityY);
                         }
-                        mVelocityTracker.recycle();
+                        mVelocityTracker.clear();
                     } else {
+                        // 传递滑动事件
                         childRecyclerView.scrollBy(0, deltaY);
-                        mLastTouchY = e.getRawY();
                     }
+
+                    childConsumeDistance += deltaY;
+                    mLastTouchY = e.getRawY();
+                    childConsumeTouch = true;
                     return true;
                 }
             }
         }
 
         mLastTouchY = e.getRawY();
+
+        if (childConsumeTouch) {
+            // 在同一个事件序列中，子容器消耗了部分滑动距离，需要扣除掉
+            MotionEvent adjustedEvent = MotionEvent.obtain(
+                    e.getDownTime(),
+                    e.getEventTime(),
+                    e.getAction(),
+                    e.getX(),
+                    e.getY() + childConsumeDistance, // 更新Y坐标
+                    e.getMetaState()
+            );
+
+            boolean handled = super.onTouchEvent(adjustedEvent);
+            adjustedEvent.recycle();
+            return handled;
+        }
+
+        if (e.getAction() == MotionEvent.ACTION_UP || e.getAction() == MotionEvent.ACTION_CANCEL) {
+            mVelocityTracker.clear();
+        }
+
         try {
             return super.onTouchEvent(e);
         } catch (Exception ex) {
