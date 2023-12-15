@@ -12,7 +12,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 /**
- * Created by yuyuhang on 2023/12/14.
+ * Created by yuyang on 2023/12/14.
  */
 public class ChildAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 

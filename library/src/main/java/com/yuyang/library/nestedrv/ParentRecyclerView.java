@@ -7,13 +7,12 @@ import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
-import android.view.View;
 import android.view.ViewConfiguration;
 
 /**
  * 父RecyclerView
  * <p>
- * Created by yuyuhang on 2023/12/4.
+ * Created by yuyang on 2023/12/4.
  */
 public class ParentRecyclerView extends RecyclerView {
 
@@ -259,6 +258,19 @@ public class ParentRecyclerView extends RecyclerView {
 
     @Override
     public void scrollToPosition(final int position) {
+        checkChildNeedScrollToTop(position);
+
+        super.scrollToPosition(position);
+    }
+
+    @Override
+    public void smoothScrollToPosition(int position) {
+        checkChildNeedScrollToTop(position);
+
+        super.smoothScrollToPosition(position);
+    }
+
+    private void checkChildNeedScrollToTop(int position) {
         if (position == 0) {
             // 父容器滚动到顶部，从交互上来说子容器也需要滚动到顶部
             ChildRecyclerView childRecyclerView = findNestedScrollingChildRecyclerView();
@@ -266,45 +278,5 @@ public class ParentRecyclerView extends RecyclerView {
                 childRecyclerView.scrollToPosition(0);
             }
         }
-
-        super.scrollToPosition(position);
-    }
-
-    @Override
-    public boolean onStartNestedScroll(View child, View target, int nestedScrollAxes) {
-        return target instanceof ChildRecyclerView;
-    }
-
-    @Override
-    public void onNestedPreScroll(View target, int dx, int dy, int[] consumed) {
-        ChildRecyclerView childRecyclerView = findNestedScrollingChildRecyclerView();
-        //1、当前ParentRecyclerView没有滑动底，且dy> 0，即下滑
-        boolean isParentCanScroll = dy > 0 && !isScrollToBottom();
-        //2、当前ChildRecyclerView滑到顶部了，且dy < 0，即上滑
-        boolean isChildCanNotScroll = dy < 0 && (childRecyclerView == null || childRecyclerView.isScrollToTop());
-        if (isParentCanScroll || isChildCanNotScroll) {
-            smoothScrollBy(0, dy);
-            consumed[1] = dy;
-        }
-    }
-
-    @Override
-    public boolean onNestedFling(View target, float velocityX, float velocityY, boolean consumed) {
-        return true;
-    }
-
-    @Override
-    public boolean onNestedPreFling(View target, float velocityX, float velocityY) {
-        ChildRecyclerView childRecyclerView = findNestedScrollingChildRecyclerView();
-        // 1、当前ParentRecyclerView没有滑动底，且向下滑动，即下滑
-        boolean isParentCanFling = velocityY > 0f && !isScrollToBottom();
-        // 2、当前ChildRecyclerView滑到顶部了，且向上滑动，即上滑
-        boolean isChildCanNotFling = velocityY < 0 && (childRecyclerView == null || childRecyclerView.isScrollToTop());
-
-        if (!isParentCanFling && !isChildCanNotFling) {
-            return false;
-        }
-        fling(0, (int) velocityY);
-        return true;
     }
 }
